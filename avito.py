@@ -3,6 +3,7 @@
 
 import requests
 from fastapi import FastAPI
+import asyncio
 
 app = FastAPI()
 
@@ -15,10 +16,24 @@ def get_region_id(region):
     id_region = response.json()['result']['locations'][1]['id']
     return id_region
 
+
+async def get_count(search, id_reg):
+    while True:
+        url = 'https://m.avito.ru/api/10/items?' \
+              'key=af0deccbgcgidddjgnvljitntccdduijhdinfgjgfjir&' \
+              'query={}&locationId={}'.format (search, id_reg)
+        response = requests.get(url)
+        count = response.json()['result']['count']
+        print(count)
+        await asyncio.sleep(60)
+
+
 @app.get("/add")
 async def root(search, region): #FIX_ME
-    get_region_id(region)
-    return {search: region}
+    id_reg = get_region_id(region)
+    mytask = asyncio.create_task(get_count(search, id_reg))
+    await mytask
+    return {search: id_reg}
 
 
 @app.get ("/stat")
