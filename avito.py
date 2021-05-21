@@ -24,16 +24,17 @@ async def get_count(search, id_reg):
               'query={}&locationId={}'.format (search, id_reg)
         response = requests.get(url)
         count = response.json()['result']['count']
-        print(count)
+        print(search, "+", id_reg, '=', count)
         await asyncio.sleep(60)
+
 
 
 @app.get("/add")
 async def root(search, region): #FIX_ME
     id_reg = get_region_id(region)
     mytask = asyncio.create_task(get_count(search, id_reg))
-    await mytask
-    return {search: id_reg}
+    #await mytask
+    return {'id связки (поисковая фраза + регион)': id_reg}
 
 
 @app.get ("/stat")
