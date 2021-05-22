@@ -4,6 +4,7 @@
 import requests
 from fastapi import FastAPI
 import asyncio
+import time
 
 app = FastAPI()
 
@@ -27,9 +28,10 @@ async def get_count(key, search, id_reg):
         response = requests.get(url)
         count = response.json()['result']['count']
         print(search, "+", id_reg, '=', count)
-        info = (key, count, search, id_reg)
+        timestamp = int(time.time())
+        info = (key, count, timestamp, search, id_reg)
         cur = conn.cursor()
-        cur.execute("INSERT INTO keys(key, count, search_fraze, region) VALUES(?, ?, ?, ?);", info)
+        cur.execute("INSERT INTO keys(key, count, timestamp, search_fraze, region) VALUES(?, ?, ?, ?, ?);", info)
         conn.commit()
 
         cur.execute("SELECT * FROM keys;")

@@ -5,6 +5,7 @@ cur.execute("""CREATE TABLE IF NOT EXISTS keys(
                id integer primary key autoincrement,
                key integer,
                count integer,
+               timestamp integer,
                search_fraze TEXT,
                region integer);
             """)
