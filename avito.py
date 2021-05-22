@@ -5,11 +5,12 @@ import requests
 from fastapi import FastAPI
 import asyncio
 import time
+import sqlite3
 
 app = FastAPI()
-
-import sqlite3
 conn = sqlite3.connect('orders.db')
+key = 0
+
 
 def get_region_id(region):
     url = 'https://m.avito.ru/api/1/slocations?' \
@@ -20,7 +21,7 @@ def get_region_id(region):
     return id_region
 
 
-async def get_count(key, search, id_reg):
+async def get_count(key_, search, id_reg):
     while True:
         url = 'https://m.avito.ru/api/10/items?' \
               'key=af0deccbgcgidddjgnvljitntccdduijhdinfgjgfjir&' \
@@ -29,7 +30,7 @@ async def get_count(key, search, id_reg):
         count = response.json()['result']['count']
         print(search, "+", id_reg, '=', count)
         timestamp = int(time.time())
-        info = (key, count, timestamp, search, id_reg)
+        info = (key_, count, timestamp, search, id_reg)
         cur = conn.cursor()
         cur.execute("INSERT INTO keys(key, count, timestamp, search_fraze, region) VALUES(?, ?, ?, ?, ?);", info)
         conn.commit()
@@ -39,14 +40,13 @@ async def get_count(key, search, id_reg):
         print(one_result)
         await asyncio.sleep(60)  # FIXME
 
-key = 0
+
 @app.get("/add")
 async def root(search, region):  # FIXME
     global key
     id_reg = get_region_id(region)
     asyncio.create_task(get_count(key, search, id_reg))
     key += 1
-    # await mytask
     return {'id связки (поисковая фраза + регион)': key-1}
 
 
