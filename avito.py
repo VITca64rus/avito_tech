@@ -34,7 +34,6 @@ async def get_count(key_, search, id_reg):
         cur = conn.cursor()
         cur.execute("INSERT INTO keys(key, count, timestamp, search_fraze, region) VALUES(?, ?, ?, ?, ?);", info)
         conn.commit()
-
         cur.execute("SELECT * FROM keys;")
         one_result = cur.fetchall()
         print(one_result)
@@ -42,7 +41,7 @@ async def get_count(key_, search, id_reg):
 
 
 @app.get("/add")
-async def root(search, region):  # FIXME
+async def root(search, region):
     global key
     id_reg = get_region_id(region)
     asyncio.create_task(get_count(key, search, id_reg))
@@ -51,5 +50,10 @@ async def root(search, region):  # FIXME
 
 
 @app.get("/stat")
-async def root(pair_id, time_start, time_end):  # FIXME
-    pass
+async def root(pair_id, t1, t2):  # FIXME
+    cur = conn.cursor()
+    sql_select_query = """select count, timestamp from keys where key = ? and timestamp > ? and timestamp < ?"""
+    cur.execute(sql_select_query, (pair_id, t1, t2))
+    records = cur.fetchall()
+    print('STAT', records)
+    return {'счётчики и соответствующие им временные метки': records}
