@@ -1,18 +1,16 @@
-# https://m.avito.ru/api/10/items?key=af0deccbgcgidddjgnvljitntccdduijhdinfgjgfjir&query=%D0%BA%D0%BE%D1%82&locationId=653241
-# https://m.avito.ru/api/10/items?key=af0deccbgcgidddjgnvljitntccdduijhdinfgjgfjir&query=%D1%81%D1%82%D1%83%D0%BB&categoryId=20&locationId=653241
-
 import requests
 from fastapi import FastAPI
 import asyncio
 import time
 import sqlite3
+from typing import List, Tuple, Dict, Set
 
 app = FastAPI()
 conn = sqlite3.connect('orders.db')
 key = 0
 
 
-def get_region_id(region):
+def get_region_id(region: str) -> int:
     url = 'https://m.avito.ru/api/1/slocations?' \
           'key=af0deccbgcgidddjgnvljitntccdduijhdinfgjgfjir' \
           '&locationId=621540&limit=10&q={}'.format(region)
@@ -21,7 +19,7 @@ def get_region_id(region):
     return id_region
 
 
-async def get_count(key_, search, id_reg):
+async def get_count(key_: int, search: str, id_reg: int) -> None:
     while True:
         url = 'https://m.avito.ru/api/10/items?' \
               'key=af0deccbgcgidddjgnvljitntccdduijhdinfgjgfjir&' \
@@ -34,15 +32,18 @@ async def get_count(key_, search, id_reg):
         cur = conn.cursor()
         cur.execute("INSERT INTO keys(key, count, timestamp, search_fraze, region) VALUES(?, ?, ?, ?, ?);", info)
         conn.commit()
+
         cur.execute("SELECT * FROM keys;")
         one_result = cur.fetchall()
         print(one_result)
+
         await asyncio.sleep(60)  # FIXME
 
 
 @app.get("/add")
-async def root(search, region):
-    global key
+async def root(search: str, region: str) -> Dict[str, int]:
+    global key  # FIXME
+    id_reg: int
     id_reg = get_region_id(region)
     asyncio.create_task(get_count(key, search, id_reg))
     key += 1
@@ -50,7 +51,7 @@ async def root(search, region):
 
 
 @app.get("/stat")
-async def root(pair_id, t1, t2):  # FIXME
+async def root(pair_id: int, t1: int, t2: int) -> Dict[str, List[int]]:
     cur = conn.cursor()
     sql_select_query = """select count, timestamp from keys where key = ? and timestamp > ? and timestamp < ?"""
     cur.execute(sql_select_query, (pair_id, t1, t2))
