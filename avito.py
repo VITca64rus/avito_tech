@@ -3,7 +3,7 @@ from fastapi import FastAPI
 import asyncio
 import time
 import sqlite3
-from typing import List, Tuple, Dict, Set
+from typing import List, Tuple, Dict
 
 app = FastAPI()
 conn = sqlite3.connect('orders.db')
@@ -42,16 +42,20 @@ async def get_count(key_: int, search: str, id_reg: int) -> None:
 
 @app.get("/add")
 async def root(search: str, region: str) -> Dict[str, int]:
-    global key  # FIXME
+    #global key  # FIXME
+    cur = conn.cursor()
+    cur.execute("SELECT MAX(key) FROM keys;")
+    key = cur.fetchone()[0] + 1
+    print(key)
     id_reg: int
     id_reg = get_region_id(region)
     asyncio.create_task(get_count(key, search, id_reg))
-    key += 1
-    return {'id связки (поисковая фраза + регион)': key-1}
+    #key += 1
+    return {'id связки (поисковая фраза + регион)': key}
 
 
 @app.get("/stat")
-async def root(pair_id: int, t1: int, t2: int) -> Dict[str, List[int]]:
+async def root(pair_id: int, t1: int, t2: int) -> Dict[str, List[Tuple[int, int]]]:
     cur = conn.cursor()
     sql_select_query = """select count, timestamp from keys where key = ? and timestamp > ? and timestamp < ?"""
     cur.execute(sql_select_query, (pair_id, t1, t2))
